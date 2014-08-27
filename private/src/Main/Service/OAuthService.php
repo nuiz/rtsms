@@ -53,7 +53,9 @@ class OAuthService extends BaseService {
 
         $tokenEntity = $this->getTokenByUserId($entity['_id']);
 
+        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
         MongoHelper::removeId($tokenEntity);
+
         return $tokenEntity;
     }
 
@@ -74,7 +76,35 @@ class OAuthService extends BaseService {
 
         $tokenEntity = $this->getTokenByUserId($entity['_id']);
 
+        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
         MongoHelper::removeId($tokenEntity);
+
+        return $tokenEntity;
+    }
+
+    public function loginPasswordAdmin($params){
+        $v = new Validator($params);
+        $v->rule('required', ['username', 'password']);
+        if(!$v->validate()) {
+            return ResponseHelper::validateError($v->errors());
+        }
+        $entity = $this->db->users->findOne(['username'=> $params['username']]);
+
+        if(is_null($entity)){
+            return ResponseHelper::notAuthorize('Username not found');
+        }
+        if(md5($params['password']) != $entity['password']){
+            return ResponseHelper::notAuthorize('Password not match');
+        }
+        if(!isset($entity['admin']) || !$entity['admin']){
+            return ResponseHelper::notAuthorize('This user not admin');
+        }
+
+        $tokenEntity = $this->getTokenByUserId($entity['_id']);
+
+        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
+        MongoHelper::removeId($tokenEntity);
+
         return $tokenEntity;
     }
 
@@ -105,13 +135,14 @@ class OAuthService extends BaseService {
         return $entity;
     }
 
-    public function getTokenByUserId($id){
+    public function getTokenByUserId($id, $type = "user"){
         $id = MongoHelper::mongoId($id);
         $tokenEntity = $this->collection->findOne(['_id'=> $id]);
         if(is_null($tokenEntity)){
             $tokenEntity = [
                 '_id'=> $id,
-                'access_token'=> $this->generateToken(MongoHelper::standardId($id))
+                'access_token'=> $this->generateToken(MongoHelper::standardId($id)),
+                'type'=> $type
             ];
             $this->collection->insert($tokenEntity);
         }

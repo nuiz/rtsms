@@ -35,7 +35,7 @@ class AutoRoute {
     public static function mapAllCTL(){
         $router = new \AltoRouter();
 
-        if($_SERVER['HTTP_HOST']!= 'api.rtsms.local' && $_SERVER['HTTP_HOST']!= 'rtsms-api.pla2app.com'){
+        if($_SERVER['HTTP_HOST']== 'localhost' || $_SERVER['HTTP_HOST']== '192.168.0.116'){
             $router->setBasePath('/rtsms');
         }
         $ctls = self::readCTL();

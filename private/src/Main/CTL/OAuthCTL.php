@@ -37,4 +37,12 @@ class OAuthCTL extends BaseCTL {
     public function password(){
         return $this->getService()->loginPassword($this->reqInfo->params());
     }
+
+    /**
+     * @POST
+     * @uri /admin
+     */
+    public function admin(){
+        return $this->getService()->loginPasswordAdmin($this->reqInfo->params());
+    }
 }
