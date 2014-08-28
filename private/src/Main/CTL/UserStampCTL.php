@@ -39,4 +39,12 @@ class UserStampCTL extends BaseCTL {
     public function addPoint(){
         return $this->getService()->addPoint($this->reqInfo->urlParam('id'), $this->reqInfo->params());
     }
+
+    /**
+     * @POST
+     * @uri /redeem/[h:id]
+     */
+    public function redeem(){
+        return $this->getService()->redeem($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+    }
 }

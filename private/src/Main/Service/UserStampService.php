@@ -24,6 +24,7 @@ class UserStampService extends BaseService {
         $this->db = DB::getDB();
         $this->collection = $this->db->users;
         $this->userHisService = new UserHistoryService($ctx);
+        $this->rewardService = new RewardService($ctx);
     }
 
     public function get($id){
@@ -34,24 +35,6 @@ class UserStampService extends BaseService {
 
         return $stamp;
     }
-
-//    public function edit($id, $params){
-//        $id = MongoHelper::mongoId($id);
-//        $stamp = $this->getStamp($id);
-//        if(is_null($stamp)){
-//            return ResponseHelper::notFound();
-//        }
-//
-//        $stamp = ArrayHelper::filterKey($this->fields, $params);
-//
-//        if(count($stamp) > 0){
-//            $set = ['stamp'=> $stamp];
-//            $set = ArrayHelper::ArrayGetPath($set);
-//            $this->collection->update(['_id'=> $id], ['$set'=> $set]);
-//        }
-//
-//        return $this->get($id);
-//    }
 
     public function getStamp($id){
         $id = MongoHelper::mongoId($id);
@@ -66,7 +49,8 @@ class UserStampService extends BaseService {
 
         $stamp = [
             'point'=> 0,
-            'newest'=> 0
+            'newest'=> 0,
+            'older'=> 0
         ];
         $set = ['stamp'=> $stamp];
         $set = ArrayHelper::ArrayGetPath($set);
@@ -82,18 +66,19 @@ class UserStampService extends BaseService {
             return ResponseHelper::validateError($v->errors());
         }
 
-        $stamp = $this->getStamp($id);
-        if(is_null($stamp)){
-            return ResponseHelper::notFound();
-        }
-
         // hard code for password
         if($params['password'] != '123456'){
             return ResponseHelper::validateError(['password'=> 'wrong password']);
         }
 
+        $stamp = $this->getStamp($id);
+        if(is_null($stamp)){
+            return ResponseHelper::notFound();
+        }
+
         $id = MongoHelper::mongoId($id);
 
+        $stamp['older'] = $stamp['point'];
         $stamp['point'] = $stamp['point'] + $params['point'];
         $stamp['newest'] = (int)$params['point'];
 
@@ -104,5 +89,44 @@ class UserStampService extends BaseService {
         $this->userHisService->add($id, ['message'=> 'ได้ทำการเพิ่มแต้ม '.$params['point'].' แต้ม']);
 
         return $this->get($id);
+    }
+
+    public function redeem($uid, $params){
+        $v = new Validator($params);
+        $v->rule('required', ['reward_id', 'password']);
+        if(!$v->validate()){
+            return ResponseHelper::validateError($v->errors());
+        }
+
+        // hard code for password
+        if($params['password'] != '123456'){
+            return ResponseHelper::validateError(['password'=> 'wrong password']);
+        }
+
+        $id = MongoHelper::mongoId($params['reward_id']);
+        $uid = MongoHelper::mongoId($uid);
+
+        $stamp = $this->get($uid);
+        if(is_null($stamp)){
+            return ResponseHelper::notFound();
+        }
+
+        $reward = $this->db->rewards->findOne(['_id'=> $id]);
+        if(is_null($reward)){
+            return ResponseHelper::notFound('Not found reward');
+        }
+
+        if($stamp['point'] < $reward['point']){
+            return ResponseHelper::error('user not enough point');
+        }
+
+        $stamp['point'] = $stamp['point'] - $reward['point'];
+        $stamp['newest'] = 0;
+        $stamp['older'] = $stamp['point'];
+
+        $this->db->users->update(['_id'=> $uid], ['$set'=> ['stamp'=> $stamp]]);
+        $this->userHisService->add($uid, ['message'=> 'ได้ทำการแลกรางวัล '.$reward['name']]);
+
+        return $stamp;
     }
 }

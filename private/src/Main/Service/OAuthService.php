@@ -74,10 +74,15 @@ class OAuthService extends BaseService {
             return ResponseHelper::notAuthorize('Password not match');
         }
 
-        $tokenEntity = $this->getTokenByUserId($entity['_id']);
+        $type = "user";
+        if(isset($entity['admin']) && $entity['admin']){
+            $type = "admin";
+        }
+        $tokenEntity = $this->getTokenByUserId($entity['_id'], $type);
 
-        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
-        MongoHelper::removeId($tokenEntity);
+//        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
+        MongoHelper::standardIdEntity($tokenEntity);
+        $tokenEntity['user_id'] = $tokenEntity['id'];
 
         return $tokenEntity;
     }
@@ -100,10 +105,11 @@ class OAuthService extends BaseService {
             return ResponseHelper::notAuthorize('This user not admin');
         }
 
-        $tokenEntity = $this->getTokenByUserId($entity['_id']);
+        $tokenEntity = $this->getTokenByUserId($entity['_id'], 'admin');
 
-        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
-        MongoHelper::removeId($tokenEntity);
+//        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
+        MongoHelper::standardIdEntity($tokenEntity);
+        $tokenEntity['user_id'] = $tokenEntity['id'];
 
         return $tokenEntity;
     }
@@ -111,6 +117,7 @@ class OAuthService extends BaseService {
     public function createUser($fData){
         $entity['username'] = $fData['id'];
         $entity['fb_id'] = $fData['id'];
+        $entity['fb_name'] = $fData['id'];
         $entity['gender'] = $fData['gender'];
         $entity['email'] = $fData['email'];
         $entity['display_name'] = $fData['name'];

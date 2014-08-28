@@ -17,7 +17,7 @@ use Main\Helper\ResponseHelper;
 use Valitron\Validator;
 
 class UserService extends BaseService {
-    protected $fields = ["username", "email", "password", "gender", "birth_date", "picture", "mobile", "website"];
+    protected $fields = ["type", "display_name", "username", "email", "password", "gender", "birth_date", "picture", "mobile", "website", "fb_id", "fb_name"];
 
     public function __construct($ctx){
         $this->setContext($ctx);
@@ -56,11 +56,14 @@ class UserService extends BaseService {
 
         $entity['password'] = md5($entity['password']);
         $entity['display_name'] = $entity['username'];
-        $entity['birth_date'] = new \MongoTimestamp($entity['birth_date']);
+        $entity['birth_date'] = new \MongoTimestamp(strtotime($entity['birth_date']));
 
         // set website,mobile to ''
-        $entity['website'] = null;
-        $entity['mobile'] = null;
+        $entity['website'] = '';
+        $entity['mobile'] = '';
+
+        $entity['fb_id'] = '';
+        $entity['fb_name'] = '';
 
         $this->collection->insert($entity);
         MongoHelper::standardIdEntity($entity);
@@ -71,7 +74,7 @@ class UserService extends BaseService {
     }
 
     public function edit($id, $params){
-        $allow = ["email", "gender", "birth_date", "website", "mobile"];
+        $allow = ["email", "gender", "birth_date", "website", "mobile", "display_name"];
         $set = ArrayHelper::filterKey($allow, $params);
         $v = new Validator($set);
         $v->rule('email', 'email');
@@ -129,7 +132,18 @@ class UserService extends BaseService {
         }
 
         MongoHelper::standardIdEntity($entity);
-        $entity['birth_date'] = MongoHelper::timeToInt($entity['birth_date']);
+        $entity['birth_date'] = date('Y-m-d H:i:s', MongoHelper::timeToInt($entity['birth_date']));
+
+        if(isset($entity['picture'])){
+            $entity['picture'] = Image::load($entity['picture'])->toArrayResponse();
+        }
+        else {
+            $entity['picture'] = Image::load([
+                'id'=> '53fddf46a636959b048b4574png',
+                'width'=> 200,
+                'height'=> 200
+            ])->toArrayResponse();
+        }
         return $entity;
     }
 
