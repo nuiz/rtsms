@@ -2,27 +2,26 @@
 /**
  * Created by PhpStorm.
  * User: p2
- * Date: 8/30/14
- * Time: 4:31 PM
+ * Date: 9/1/14
+ * Time: 3:29 PM
  */
 
 namespace Main\CTL;
-use Main\Service\ProductService;
+use Main\Service\GalleryService;
 
 
 /**
  * @Restful
- * @uri /product
+ * @uri /gallery
  */
-class ProductCTL extends BaseCTL {
+class GalleryCTL extends BaseCTL {
     protected $service = null;
     public function getService(){
         if(is_null($this->service)){
-            $this->service = new ProductService($this->getCtx());
+            $this->service = new GalleryService($this->getCtx());
         }
         return $this->service;
     }
-
     /**
      * @POST
      */
@@ -45,4 +44,4 @@ class ProductCTL extends BaseCTL {
     public function getPicture(){
         return $this->getService()->get($this->reqInfo->urlParam('id'), $this->reqInfo->params());
     }
-}
+} 

@@ -16,7 +16,7 @@ use Main\Helper\MongoHelper;
 use Main\Helper\ResponseHelper;
 use Valitron\Validator;
 
-class ProductService extends BaseService {
+class GalleryService extends BaseService {
     protected $fields = ["name", "detail", "pictures"];
 
     public function __construct($ctx){
@@ -24,12 +24,13 @@ class ProductService extends BaseService {
 
         $this->db = DB::getDB();
         $this->collection = $this->db->node;
+        $this->nodeService = new NodeService($ctx);
     }
 
     public function get($id){
         $id = MongoHelper::mongoId($id);
-        $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'product'],
-            ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'price'=> 1]);
+        $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'gallery'],
+            ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1]);
         if(is_null($entity)){
             return ResponseHelper::notFound();
         }
@@ -45,7 +46,7 @@ class ProductService extends BaseService {
 
     public function add($params){
         $v = new Validator($params);
-        $v->rule('required', ['name', 'detail', 'pictures', 'price']);
+        $v->rule('required', ['name', 'detail', 'pictures']);
 
         if(!$v->validate()){
             return ResponseHelper::validateError($v->errors());
@@ -54,10 +55,14 @@ class ProductService extends BaseService {
             return ResponseHelper::validateError(['pictures'=> ['pictures must be array']]);
         }
 
-        $insert = ArrayHelper::filterKey(['name', 'detail', 'pictures', 'price'], $params);
+        $insert = ArrayHelper::filterKey(['name', 'detail', 'pictures'], $params);
 
         if(empty($params['parent_id'])){
-            $insert['parent'] = null;
+
+            // insert gallery id
+            $parent = $this->nodeService->getRootFolder('gallery');
+            $parentId = MongoHelper::mongoId($parent['id']);
+            $insert['parent'] = ['id'=> $parentId];
         }
         else{
             $parentId = MongoHelper::mongoId($params['parent_id']);
@@ -80,8 +85,7 @@ class ProductService extends BaseService {
             ['$group'=> ['_id'=> null, 'max'=> ['$max'=> '$seq']]]
         ]);
         $insert['seq'] = (int)@$agg['result'][0]['max'] + 1;
-        $insert['type'] = 'product';
-        $insert['price'] = (int)$insert['price'];
+        $insert['type'] = 'gallery';
 
         foreach($insert['pictures'] as $key=> $value){
             $insert['pictures'][$key] = Image::upload($value)->toArray();
@@ -93,7 +97,7 @@ class ProductService extends BaseService {
 
     public function edit($id, $params){
         $id = MongoHelper::mongoId($id);
-        $condition = ['_id'=> $id, 'type'=> 'product'];
+        $condition = ['_id'=> $id, 'type'=> 'gallery'];
         $entity = $this->collection->findOne($condition, ['name', 'detail']);
         if(is_null($entity)){
             return ResponseHelper::notFound();
@@ -102,14 +106,14 @@ class ProductService extends BaseService {
         $set = ArrayHelper::filterKey(['name', 'detail'], $params);
         if(isset($params['parent_id'])){
             $parentId = MongoHelper::mongoId($params['parent_id']);
-            if($this->collection->count(['_id'=> $parentId, 'type'=> 'product']) == 0){
+            if($this->collection->count(['_id'=> $parentId, 'type'=> 'gallery']) == 0){
                 return ResponseHelper::notFound('Not found parent folder');
             }
             $set['parent'] = ['id'=> $parentId];
         }
 
         if(count($set) > 0){
-            $this->collection->update(['_id'=> $id, 'type'=> 'product'], ['$set'=> $set]);
+            $this->collection->update(['_id'=> $id, 'type'=> 'gallery'], ['$set'=> $set]);
         }
 
         return $this->get($id);
@@ -162,7 +166,7 @@ class ProductService extends BaseService {
 
     public function delete($id){
         $id = MongoHelper::mongoId($id);
-        $condition = ['_id'=> $id, 'type'=> 'product'];
+        $condition = ['_id'=> $id, 'type'=> 'gallery'];
         $this->collection->remove($condition);
         return ['success'=> true];
     }

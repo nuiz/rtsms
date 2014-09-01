@@ -60,6 +60,7 @@ class NodeCTL extends BaseCTL {
      */
     public function getsChildren(){
         $params = $this->reqInfo->params();
+        $params['parent_id'] = $this->reqInfo->urlParam('id');
         return $this->getService()->gets($params);
     }
 }

@@ -14,6 +14,7 @@ use Main\DB;
 use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
 use Main\Helper\ResponseHelper;
+use Main\Helper\URL;
 use Valitron\Validator;
 
 class NodeService extends BaseService {
@@ -26,7 +27,7 @@ class NodeService extends BaseService {
         $this->folderService = new FolderService($ctx);
     }
 
-    public function getsRoot($params, $name){
+    public function getRootFolder($name){
         $folder = $this->collection->findOne(['root'=> $name]);
         if(is_null($folder)){
             $b64 = base64_encode(file_get_contents('private/default/folder/leo_folder.jpg'));
@@ -35,6 +36,11 @@ class NodeService extends BaseService {
         else {
             MongoHelper::standardIdEntity($folder);
         }
+        return $folder;
+    }
+
+    public function getsRoot($params, $name){
+        $folder = $this->getRootFolder($name);
         $options = $params;
         $options['parent_id'] = $folder['id'];
         return $this->gets($options);
@@ -65,9 +71,22 @@ class NodeService extends BaseService {
         foreach($cursor as $item){
             if($item['type']=='folder'){
                 $item['thumb'] = Image::load($item['thumb'])->toArrayResponse();
+                $item['node'] = [
+                    'children'=> URL::absolute('/node/'.MongoHelper::standardId($item['_id'].'/children'))
+                ];
             }
             else if($item['type']=='product'){
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
+                $item['node'] = [
+                    'pictures'=> URL::absolute('/product/'.MongoHelper::standardId($item['_id']).'/children')
+                ];
+                unset($item['pictures']);
+            }
+            else if($item['type']=='gallery') {
+                $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
+                $item['node'] = [
+                    'pictures'=> URL::absolute('/gallery/'.MongoHelper::standardId($item['_id']).'/children')
+                ];
                 unset($item['pictures']);
             }
             unset($item['parent']);
@@ -78,7 +97,7 @@ class NodeService extends BaseService {
         $total = $this->collection->count($condition);
         $length = $cursor->count(true);
 
-        return array(
+        $res = array(
             'length'=> $length,
             'total'=> $total,
             'data'=> $data,
@@ -87,5 +106,34 @@ class NodeService extends BaseService {
                 'limit'=> (int)$options['limit']
             ]
         );
+
+        if($this->getContext()->isAdminConsumer()){
+            $node = array(
+                'parent'=> null,
+            );
+            $res['id'] = null;
+            if(isset($options['parent_id'])){
+
+                $parentId = $options['parent_id'];
+                if(!($parentId instanceof \MongoId))
+                    $parentId = new \MongoId($parentId);
+
+                $condition['parent'] = \MongoDBRef::create("folders", $parentId);
+
+                // set node
+                $parent = $this->collection->findOne(array('_id'=> $parentId));
+                if(is_null($parent['parent'])){
+                    $node['parent'] = URL::absolute('/node');
+                }
+                else{
+                    $node['parent'] = URL::absolute('/node/'.$parent['parent']['$id']->{'$id'}.'/children');
+                }
+
+                $res['id'] = $options['parent_id'];
+            }
+            $res['node'] = $node;
+        }
+
+        return $res;
     }
 }
