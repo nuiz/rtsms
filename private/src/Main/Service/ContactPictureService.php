@@ -37,7 +37,7 @@ class ContactPictureService extends BaseService {
             ['$unwind'=> '$pictures'],
             ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
         ]);
-        $total = $arg['result'][0]['total'];
+        $total = (int)@$arg['result'][0]['total'];
         $limit = (int)$options['limit'];
         $page = (int)$options['page'];
 
@@ -56,7 +56,7 @@ class ContactPictureService extends BaseService {
 
         return array(
             'length'=> count($data),
-            'total'=> $total,
+            'total'=> (int)$total,
             'data'=> $data,
             'paging'=> array(
                 'page'=> (int)$options['page'],

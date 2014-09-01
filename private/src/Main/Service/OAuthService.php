@@ -129,8 +129,8 @@ class OAuthService extends BaseService {
         }
 
         // set website,mobile
-        $entity['website'] = isset($fData['website'])? $fData['website']: null;
-        $entity['mobile'] = null;
+        $entity['website'] = isset($fData['website'])? $fData['website']: '';
+        $entity['mobile'] = '';
 
         $imgData = file_get_contents("http://graph.facebook.com/{$fData['id']}/picture?type=large");
         $b64 = base64_encode($imgData);

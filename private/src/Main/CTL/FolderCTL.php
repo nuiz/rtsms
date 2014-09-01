@@ -2,38 +2,25 @@
 /**
  * Created by PhpStorm.
  * User: p2
- * Date: 8/28/14
- * Time: 12:22 PM
+ * Date: 8/30/14
+ * Time: 1:56 PM
  */
 
 namespace Main\CTL;
-use Main\Service\RewardService;
+
+use Main\Service\FolderService;
 
 /**
  * @Restful
- * @uri /reward
+ * @uri /folder
  */
-class RewardCTL extends BaseCTL {
+class FolderCTL extends BaseCTL {
     protected $service = null;
     public function getService(){
         if(is_null($this->service)){
-            $this->service = new RewardService($this->getCtx());
+            $this->service = new FolderService($this->getCtx());
         }
         return $this->service;
-    }
-
-    /**
-     * @GET
-     */
-    public function gets(){
-        return $this->getService()->gets($this->reqInfo->params());
-    }
-
-    /**
-     * @POST
-     */
-    public function add(){
-        return $this->getService()->add($this->reqInfo->params());
     }
 
     /**
@@ -53,10 +40,16 @@ class RewardCTL extends BaseCTL {
     }
 
     /**
+     * @POST
+     */
+    public function add(){
+        return $this->getService()->add($this->reqInfo->params());
+    }
+
+    /**
      * @DELETE
-     * @uri /[h:id]
      */
     public function delete(){
-        return $this->getService()->delete($this->reqInfo->urlParam('id'));
+        return $this->getService()->delete($this->reqInfo->params());
     }
-} 
+}

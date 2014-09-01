@@ -86,7 +86,10 @@ class UserStampService extends BaseService {
         $set = ArrayHelper::ArrayGetPath($set);
         $this->collection->update(['_id'=> $id], ['$set'=> $set]);
 
-        $this->userHisService->add($id, ['message'=> 'ได้ทำการเพิ่มแต้ม '.$params['point'].' แต้ม']);
+        $this->userHisService->add($id, [
+            'title'=> 'ได้รับคะแนนเพิ่ม',
+            'message'=> 'ได้ระคะแนนเพิ่ม '.$params['point'].' แต้ม'
+        ]);
 
         return $this->get($id);
     }
@@ -125,7 +128,10 @@ class UserStampService extends BaseService {
         $stamp['older'] = $stamp['point'];
 
         $this->db->users->update(['_id'=> $uid], ['$set'=> ['stamp'=> $stamp]]);
-        $this->userHisService->add($uid, ['message'=> 'ได้ทำการแลกรางวัล '.$reward['name']]);
+        $this->userHisService->add($id, [
+            'title'=> 'แลกของรางวัล',
+            'message'=> 'แลกรางวัล '.$reward['name'].' ด้วยคะแนน '.$params['point'].' แต้ม'
+        ]);
 
         return $stamp;
     }

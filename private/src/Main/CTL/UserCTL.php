@@ -42,6 +42,6 @@ class UserCTL extends BaseCTL {
      * @uri /change_password/[h:id]
      */
     public function changePassword(){
-        return $this->getService()->get($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+        return $this->getService()->changePassword($this->reqInfo->urlParam('id'), $this->reqInfo->params());
     }
 }

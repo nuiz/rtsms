@@ -39,7 +39,7 @@ class UserHistoryService extends BaseService {
             ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
         ]);
 
-        $total = $arg['result'][0]['total'];
+        $total = (int)@$arg['result'][0]['total'];
         $limit = (int)$options['limit'];
         $page = (int)$options['page'];
 
@@ -80,6 +80,7 @@ class UserHistoryService extends BaseService {
 
         $now = new \MongoTimestamp();
         $obj = [
+            'title'=> $params['title'],
             'message'=> $params['message'],
             'created_at'=> $now
         ];
@@ -87,4 +88,4 @@ class UserHistoryService extends BaseService {
 
         return $obj;
     }
-} 
+}

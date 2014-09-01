@@ -116,9 +116,11 @@ class UserService extends BaseService {
         }
 
         if((md5($params['old_password']) != $entity['password']) && isset($entity['password'])){
-            return ResponseHelper::validateError(['password'=> ['Password not match']]);
+            return ResponseHelper::validateError(['old_password'=> ['Password not match']]);
         }
-        $this->collection->update(['_id'=> $id], ['password'=> md5($params['password'])]);
+
+        $set = ['password'=> md5($params['new_password'])];
+        $this->collection->update(['_id'=> $id], ['$set'=> $set]);
 
         return ['success'=> true];
     }
