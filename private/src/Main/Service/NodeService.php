@@ -23,6 +23,21 @@ class NodeService extends BaseService {
 
         $this->db = DB::getDB();
         $this->collection = $this->db->node;
+        $this->folderService = new FolderService($ctx);
+    }
+
+    public function getsRoot($params, $name){
+        $folder = $this->collection->findOne(['root'=> $name]);
+        if(is_null($folder)){
+            $b64 = base64_encode(file_get_contents('private/default/folder/leo_folder.jpg'));
+            $folder = $this->folderService->add(['name'=> $name, 'detail'=> $name, 'thumb'=> $b64], $name);
+        }
+        else {
+            MongoHelper::standardIdEntity($folder);
+        }
+        $options = $params;
+        $options['parent_id'] = $folder['id'];
+        return $this->gets($options);
     }
 
     public function gets($options = array()){

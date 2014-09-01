@@ -80,7 +80,7 @@ class ProductService extends BaseService {
             ['$group'=> ['_id'=> null, 'max'=> ['$max'=> '$seq']]]
         ]);
         $insert['seq'] = (int)@$agg['result'][0]['max'] + 1;
-        $insert['thumb'] = Image::upload($insert['thumb'])->toArray();
+//        $insert['thumb'] = Image::upload($insert['thumb'])->toArray();
         $insert['type'] = 'product';
         $insert['price'] = (int)$insert['price'];
 

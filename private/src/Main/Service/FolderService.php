@@ -38,7 +38,7 @@ class FolderService extends BaseService {
         return $entity;
     }
 
-    public function add($params){
+    public function add($params, $root = null){
         $v = new Validator($params);
         $v->rule('required', ['name', 'detail', 'thumb']);
 
@@ -74,6 +74,10 @@ class FolderService extends BaseService {
         $insert['seq'] = (int)@$agg['result'][0]['max'] + 1;
         $insert['thumb'] = Image::upload($insert['thumb'])->toArray();
         $insert['type'] = 'folder';
+
+        if(!is_null($root)){
+            $insert['root'] = $root;
+        }
 
         $this->collection->insert($insert);
         return $this->get($insert['_id']);
