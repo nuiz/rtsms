@@ -70,6 +70,6 @@ class CalendarService extends BaseService {
                 'items'=> $activity
             ];
         }
-        return $days;
+        return ['data'=> $days];
     }
 }
