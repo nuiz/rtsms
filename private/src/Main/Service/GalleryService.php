@@ -42,8 +42,16 @@ class GalleryService extends BaseService {
 //            $entity['pictures'][$key] = Image::load($value)->toArrayResponse();
 //        }
 
-        MongoHelper::standardIdEntity($entity);
+        $arg = $this->collection->aggregate([
+            ['$match'=> ['_id'=> $id, 'type'=> 'gallery']],
+            ['$project'=> ['pictures'=> 1]],
+            ['$unwind'=> '$pictures'],
+            ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
+        ]);
+        $entity['picture_length'] = (int)@$arg['result'][0]['total'];
         $entity['node'] = NodeHelper::gallery($entity['id']);
+
+        MongoHelper::standardIdEntity($entity);
 
         return $entity;
     }
@@ -77,8 +85,8 @@ class GalleryService extends BaseService {
         }
 
         // insert created_at, updated_at
-        $insert['created_at'] = new \MongoDate();
-        $insert['updated_at'] = new \MongoDate();
+        $insert['created_at'] = new \MongoTimestamp();
+        $insert['updated_at'] = $insert['created_at'];
 
         $match = ['parent'=> null];
         if(!is_null($insert['parent'])){

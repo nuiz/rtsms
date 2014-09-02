@@ -41,8 +41,8 @@ class RewardService extends BaseService {
         $insert['thumb'] = Image::upload($params['thumb'])->toArray();
 
         // insert created_at, updated_at
-        $insert['created_at'] = new \MongoDate();
-        $insert['updated_at'] = new \MongoDate();
+        $insert['created_at'] = new \MongoTimestamp();
+        $insert['updated_at'] = $insert['created_at'];
 
         $agg = $this->collection->aggregate([
             '$group'=> ['_id'=> null, 'max'=> ['$max'=> '$seq']]

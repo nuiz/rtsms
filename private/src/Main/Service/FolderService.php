@@ -63,8 +63,8 @@ class FolderService extends BaseService {
         }
 
         // insert created_at, updated_at
-        $insert['created_at'] = new \MongoDate();
-        $insert['updated_at'] = new \MongoDate();
+        $insert['created_at'] = new \MongoTimestamp();
+        $insert['updated_at'] = $insert['created_at'];
 
         $match = ['parent'=> null];
         if(!is_null($insert['parent'])){

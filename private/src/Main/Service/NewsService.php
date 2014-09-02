@@ -3,7 +3,7 @@
  * Created by PhpStorm.
  * User: p2
  * Date: 9/2/14
- * Time: 4:44 AM
+ * Time: 12:31 PM
  */
 
 namespace Main\Service;
@@ -16,14 +16,15 @@ use Main\Helper\MongoHelper;
 use Main\Helper\ResponseHelper;
 use Valitron\Validator;
 
-class ActivityService extends BaseService {
-    protected $fields = ['name', 'detail', 'datetime', 'thumb'];
+class NewsService extends BaseService {
+    protected static $instance = null;
+    protected $fields = ["name", "detail", "thumb"];
 
     public function __construct($ctx){
         $this->setContext($ctx);
 
         $this->db = DB::getDB();
-        $this->collection = $this->db->activity;
+        $this->collection = $this->db->news;
     }
 
     public static function instance($ctx){
@@ -35,68 +36,31 @@ class ActivityService extends BaseService {
 
     public function add($params){
         $v = new Validator($params);
-        $v->rule('required', ['name', 'detail', 'datetime', 'thumb']);
-        $v->rule('date', ['datetime']);
+        $v->rule('required', ['name', 'detail', 'thumb']);
 
         if(!$v->validate()){
             return ResponseHelper::validateError($v->errors());
         }
 
-        $insert = ArrayHelper::filterKey(['name', 'detail', 'datetime', 'thumb'], $params);
+        $insert = ArrayHelper::filterKey(['name', 'detail', 'thumb'], $params);
         $insert['thumb'] = Image::upload($params['thumb'])->toArray();
-        $insert['datetime'] = new \MongoTimestamp(strtotime($insert['datetime']));
 
         // insert created_at, updated_at
         $insert['created_at'] = new \MongoTimestamp();
         $insert['updated_at'] = $insert['created_at'];
 
         $this->collection->insert($insert);
-        FeedService::instance($this->getContext())->add($insert['_id'], 'activity', $insert['created_at']);
+        FeedService::instance($this->getContext())->add($insert['_id'], 'news', $insert['created_at']);
 
         return $this->get($insert['_id']);
     }
 
-    public function edit($id, $params){
-        $id = MongoHelper::mongoId($id);
-
-        $v = new Validator($params);
-        $v->rule('date', ['datetime']);
-
-        if(!$v->validate()){
-            return ResponseHelper::validateError($v->errors());
-        }
-
-        $set = ArrayHelper::filterKey(['name', 'detail', 'datetime', 'thumb'], $params);
-        if(isset($set['datetime'])){
-            $set['datetime'] = new \MongoTimestamp(strtotime($set['datetime']));
-        }
-        if(isset($set['thumb'])){
-            $set['thumb'] = Image::upload($params['thumb'])->toArray();
-        }
-        if(count($set) > 0){
-            // update updated_at
-            $set['updated_at'] = new \MongoTimestamp();
-            $this->collection->update(['_id'=> $id], ['$set'=> $set]);
-        }
-        return $this->get($id);
-    }
-
-    public function get($id){
-        $id = MongoHelper::mongoId($id);
-
-        $entity = $this->collection->findOne(['_id'=> $id], $this->fields);
-        $entity['thumb'] = Image::load($entity['thumb'])->toArrayResponse();
-        $entity['datetime'] = MongoHelper::timeToStr($entity['datetime']);
-        MongoHelper::standardIdEntity($entity);
-        return $entity;
-    }
-
-    public function gets($options = array()){
+    public function gets($params){
         $default = array(
             "page"=> 1,
             "limit"=> 15
         );
-        $options = array_merge($default, $options);
+        $options = array_merge($default, $params);
 
         $skip = ($options['page']-1)*$options['limit'];
         $condition = [];
@@ -110,7 +74,6 @@ class ActivityService extends BaseService {
         $data = [];
         foreach($cursor as $item){
             $item['thumb'] = Image::load($item['thumb'])->toArrayResponse();
-            $item['datetime'] = MongoHelper::timeToStr($item['datetime']);
             MongoHelper::standardIdEntity($item);
             $data[] = $item;
         }
@@ -118,7 +81,7 @@ class ActivityService extends BaseService {
         $total = $this->collection->count($condition);
         $length = $cursor->count(true);
 
-        return array(
+        return [
             'length'=> $length,
             'total'=> $total,
             'data'=> $data,
@@ -126,7 +89,31 @@ class ActivityService extends BaseService {
                 'page'=> (int)$options['page'],
                 'limit'=> (int)$options['limit']
             ]
-        );
+        ];
+    }
+
+    public function get($id){
+        $id = MongoHelper::mongoId($id);
+
+        $entity = $this->collection->findOne(['_id'=> $id], $this->fields);
+        $entity['thumb'] = Image::load($entity['thumb'])->toArrayResponse();
+        MongoHelper::standardIdEntity($entity);
+        return $entity;
+    }
+
+    public function edit($id, $params){
+        $id = MongoHelper::mongoId($id);
+
+        $set = ArrayHelper::filterKey(['name', 'detail', 'thumb'], $params);
+        if(isset($set['thumb'])){
+            $set['thumb'] = Image::upload($params['thumb'])->toArray();
+        }
+        if(count($set) > 0){
+            // update updated_at
+            $set['updated_at'] = new \MongoTimestamp();
+            $this->collection->update(['_id'=> $id], ['$set'=> $set]);
+        }
+        return $this->get($id);
     }
 
     public function delete($id){

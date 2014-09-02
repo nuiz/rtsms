@@ -68,17 +68,36 @@ class NodeService extends BaseService {
         foreach($cursor as $item){
             if($item['type']=='folder'){
                 $item['thumb'] = Image::load($item['thumb'])->toArrayResponse();
+                $item['children_length'] = $this->collection->count(['parent.id'=> $item['_id']]);
                 $item['node'] = NodeHelper::folder($item['_id']);
             }
             else if($item['type']=='product'){
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
-                $item['node'] = NodeHelper::product($item['_id']);
                 unset($item['pictures']);
+
+                $item['node'] = NodeHelper::product($item['_id']);
+
+                $arg = $this->collection->aggregate([
+                    ['$match'=> ['_id'=> $item['_id'], 'type'=> 'product']],
+                    ['$project'=> ['pictures'=> 1]],
+                    ['$unwind'=> '$pictures'],
+                    ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
+                ]);
+                $item['picture_length'] = (int)@$arg['result'][0]['total'];
             }
             else if($item['type']=='gallery') {
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
-                $item['node'] = NodeHelper::gallery($item['_id']);
                 unset($item['pictures']);
+
+                $item['node'] = NodeHelper::gallery($item['_id']);
+
+                $arg = $this->collection->aggregate([
+                    ['$match'=> ['_id'=> $item['_id'], 'type'=> 'gallery']],
+                    ['$project'=> ['pictures'=> 1]],
+                    ['$unwind'=> '$pictures'],
+                    ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
+                ]);
+                $item['picture_length'] = (int)@$arg['result'][0]['total'];
             }
             unset($item['parent']);
             MongoHelper::standardIdEntity($item);
@@ -117,7 +136,7 @@ class NodeService extends BaseService {
                     $node['parent'] = URL::absolute('/node');
                 }
                 else{
-                    $node['parent'] = URL::absolute('/node/'.$parent['parent']['$id']->{'$id'}.'/children');
+                    $node['parent'] = URL::absolute('/node/'.$parent['parent']['id']->{'$id'}.'/children');
                 }
 
                 $res['id'] = $options['parent_id'];

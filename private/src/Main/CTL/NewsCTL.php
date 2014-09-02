@@ -2,25 +2,39 @@
 /**
  * Created by PhpStorm.
  * User: p2
- * Date: 8/30/14
- * Time: 1:56 PM
+ * Date: 9/2/14
+ * Time: 1:07 PM
  */
 
 namespace Main\CTL;
+use Main\Service\NewsService;
 
-use Main\Service\FolderService;
 
 /**
  * @Restful
- * @uri /folder
+ * @uri /news
  */
-class FolderCTL extends BaseCTL {
+class NewsCTL extends BaseCTL {
     protected $service = null;
     public function getService(){
         if(is_null($this->service)){
-            $this->service = new FolderService($this->getCtx());
+            $this->service = NewsService::instance($this->getCtx());
         }
         return $this->service;
+    }
+
+    /**
+     * @GET
+     */
+    public function gets(){
+        return $this->getService()->gets($this->reqInfo->params());
+    }
+
+    /**
+     * @POST
+     */
+    public function add(){
+        return $this->getService()->add($this->reqInfo->params());
     }
 
     /**
@@ -40,17 +54,10 @@ class FolderCTL extends BaseCTL {
     }
 
     /**
-     * @POST
-     */
-    public function add(){
-        return $this->getService()->add($this->reqInfo->params());
-    }
-
-    /**
      * @DELETE
      * @uri /[h:id]
      */
     public function delete(){
         return $this->getService()->delete($this->reqInfo->urlParam('id'));
     }
-}
+} 

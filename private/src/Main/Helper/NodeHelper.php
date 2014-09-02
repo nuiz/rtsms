@@ -19,16 +19,16 @@ class NodeHelper {
     public static function product($id){
         $id = MongoHelper::standardId($id);
         return [
-            'pictures'=> URL::absolute('/gallery/'.$id.'/picture'),
-            'share'=> URL::share('/gallery/'.$id)
+            'pictures'=> URL::absolute('/product/'.$id.'/picture'),
+            'share'=> URL::share('/product/'.$id)
         ];
     }
 
     public static function gallery($id){
         $id = MongoHelper::standardId($id);
         return [
-            'pictures'=> URL::absolute('/product/'.$id.'/picture'),
-            'share'=> URL::share('/product/'.$id)
+            'pictures'=> URL::absolute('/gallery/'.$id.'/picture'),
+            'share'=> URL::share('/gallery/'.$id)
         ];
     }
 }

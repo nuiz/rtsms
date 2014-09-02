@@ -11,13 +11,12 @@ namespace Main\Service;
 
 use Main\DataModel\Image;
 use Main\DB;
-use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
 use Main\Helper\ResponseHelper;
-use Valitron\Validator;
 
 class FeedService extends BaseService {
-    protected $fields = ['name', 'message', 'thumb'];
+    protected static $instance = null;
+    protected $fields = ['type', 'created_at'];
 
     public function __construct($ctx){
         $this->setContext($ctx);
@@ -26,64 +25,32 @@ class FeedService extends BaseService {
         $this->collection = $this->db->feed;
     }
 
-    public function addNews($params){
-        $v = new Validator($params);
-        $v->rule('required', ['name', 'message', 'thumb']);
-
-        if(!$v->validate()){
-            return ResponseHelper::validateError($v->errors());
+    public static function instance($ctx){
+        if(is_null(self::$instance)){
+            self::$instance = new self($ctx);
         }
-
-        $insert = ArrayHelper::filterKey(['name', 'message', 'thumb'], $params);
-        $insert['thumb'] = Image::upload($params['thumb'])->toArray();
-
-        // insert created_at, updated_at
-        $insert['created_at'] = new \MongoDate();
-        $insert['updated_at'] = $insert['created_at'];
-
-        $this->collection->insert($insert);
-
-        return $this->get($insert['_id']);
+        return self::$instance;
     }
 
-    public function edit($id, $params){
+    public function add($id, $type, $create_at){
         $id = MongoHelper::mongoId($id);
+        $entity = ['_id'=> $id, 'type'=> $type, 'created_at'=> $create_at];
+        $this->collection->insert($entity);
 
-        $v = new Validator($params);
-
-        if(!$v->validate()){
-            return ResponseHelper::validateError($v->errors());
-        }
-
-        $set = ArrayHelper::filterKey(['name', 'message', 'thumb'], $params);
-        if(isset($set['thumb'])){
-            $set['thumb'] = Image::upload($params['thumb'])->toArray();
-        }
-        if(count($set) > 0){
-            // update updated_at
-            $set['updated_at'] = new \MongoDate();
-            $this->collection->update(['_id'=> $id], ['$set'=> $set]);
-        }
-        return $this->get($id);
-    }
-
-    public function addActivity($id, $type, $created_at){
-
-    }
-
-    public function get($id){
-        $id = MongoHelper::mongoId($id);
-
-        $entity = $this->collection->findOne(['_id'=> $id], $this->fields);
-        $entity['thumb'] = Image::load($entity['thumb'])->toArrayResponse();
-        MongoHelper::standardIdEntity($entity);
         return $entity;
+    }
+
+    public function remove($id, $type){
+        $id = MongoHelper::mongoId($id);
+        $this->collection->remove(['_id'=> $id, 'type'=> $type]);
+
+        return true;
     }
 
     public function gets($options = array()){
         $default = array(
             "page"=> 1,
-            "limit"=> 15
+            "limit"=> 15,
         );
         $options = array_merge($default, $options);
 
@@ -94,12 +61,13 @@ class FeedService extends BaseService {
             ->find($condition, $this->fields)
             ->limit((int)$options['limit'])
             ->skip((int)$skip)
-            ->sort([$options['created_at']=> -1]);
+            ->sort(['created_at'=> -1]);
 
         $data = [];
         foreach($cursor as $item){
-            $item['thumb'] = Image::load($item['thumb'])->toArrayResponse();
-            MongoHelper::standardIdEntity($item);
+            if($item['type']=='news'){
+                $item = NewsService::instance($this->getContext())->get($item['_id']);
+            }
             $data[] = $item;
         }
 
@@ -121,6 +89,6 @@ class FeedService extends BaseService {
         $id = MongoHelper::mongoId($id);
         $this->collection->remove(['_id'=> $id]);
 
-        return ['success'=> true];
+        return true;
     }
 }
