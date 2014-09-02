@@ -97,12 +97,15 @@ class ProductService extends BaseService {
     public function edit($id, $params){
         $id = MongoHelper::mongoId($id);
         $condition = ['_id'=> $id, 'type'=> 'product'];
-        $entity = $this->collection->findOne($condition, ['name', 'detail']);
+        $entity = $this->collection->findOne($condition, ['name', 'detail', 'price']);
         if(is_null($entity)){
             return ResponseHelper::notFound();
         }
 
-        $set = ArrayHelper::filterKey(['name', 'detail'], $params);
+        $set = ArrayHelper::filterKey(['name', 'detail', 'price'], $params);
+        if(isset($set['price'])){
+            $set['price'] = (int)$set['price'];
+        }
         if(isset($params['parent_id'])){
             $parentId = MongoHelper::mongoId($params['parent_id']);
             if($this->collection->count(['_id'=> $parentId, 'type'=> 'product']) == 0){
@@ -112,7 +115,7 @@ class ProductService extends BaseService {
         }
 
         if(count($set) > 0){
-            $this->collection->update(['_id'=> $id, 'type'=> 'product'], ['$set'=> $set]);
+            $this->collection->update($condition, ['$set'=> $set]);
         }
 
         return $this->get($id);

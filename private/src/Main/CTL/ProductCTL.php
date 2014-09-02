@@ -39,6 +39,22 @@ class ProductCTL extends BaseCTL {
     }
 
     /**
+     * @PUT
+     * @uri /[h:id]
+     */
+    public function edit(){
+        return $this->getService()->edit($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+    }
+
+    /**
+     * @DELETE
+     * @uri /[h:id]
+     */
+    public function delete(){
+        return $this->getService()->delete($this->reqInfo->urlParam('id'));
+    }
+
+    /**
      * @GET
      * @uri /[h:id]/picture
      */
