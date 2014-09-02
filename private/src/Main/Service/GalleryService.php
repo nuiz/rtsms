@@ -119,9 +119,31 @@ class GalleryService extends BaseService {
         return $this->get($id);
     }
 
+    public function addPictures($id, $params){
+        $id = MongoHelper::mongoId($id);
+        $v = new Validator($params);
+        $v->rule('required', ['pictures']);
+        if(!$v->validate()){
+            return ResponseHelper::validateError($v->errors());
+        }
+
+        if($this->collection->count(['_id'=> $id, 'type'=> 'gallery']) == 0){
+            return ResponseHelper::notFound();
+        }
+
+        $res = [];
+        foreach($params['pictures'] as $value){
+            $img = Image::upload($value);
+            $this->collection->update(['_id'=> $id, 'type'=> 'gallery'], ['$push'=> ['pictures'=> $img->toArray()]]);
+            $res[] = $img->toArrayResponse();
+        }
+
+        return $res;
+    }
+
     public function getPictures($id, $params){
         $id = MongoHelper::mongoId($id);
-        if($this->db->users->count(['_id'=> $id]) == 0){
+        if($this->collection->count(['_id'=> $id, 'type'=> 'gallery']) == 0){
             return ResponseHelper::notFound();
         }
 
@@ -130,7 +152,7 @@ class GalleryService extends BaseService {
         $default = ["page"=> 1, "limit"=> 15];
         $options = array_merge($default, $params);
         $arg = $this->collection->aggregate([
-            ['$match'=> ['_id'=> $id]],
+            ['$match'=> ['_id'=> $id, 'type'=> 'gallery']],
             ['$project'=> ['pictures'=> 1]],
             ['$unwind'=> '$pictures'],
             ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
@@ -146,7 +168,7 @@ class GalleryService extends BaseService {
             $data = [];
         }
         else {
-            $entity = $this->collection->findOne(['_id'=> $id], ['pictures'=> ['$slice'=> $slice]]);
+            $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'gallery'], ['pictures'=> ['$slice'=> $slice]]);
             $data = Image::loads($entity['pictures'])->toArrayResponse();
         }
 
@@ -162,6 +184,39 @@ class GalleryService extends BaseService {
                 'limit'=> (int)$options['limit']
             )
         );
+    }
+
+    public function deletePictures($id, $params){
+        $id = MongoHelper::mongoId($id);
+        $v = new Validator($params);
+        $v->rule('required', ['id']);
+        if(!$v->validate()){
+            return ResponseHelper::validateError($v->errors());
+        }
+
+        if($this->collection->count(['_id'=> $id, 'type'=> 'gallery']) == 0){
+            return ResponseHelper::notFound();
+        }
+
+        $res = [];
+        foreach($params['id'] as $value){
+            $arg = $this->collection->aggregate([
+                ['$match'=> ['_id'=> $id, 'type'=> 'gallery']],
+                ['$project'=> ['pictures'=> 1]],
+                ['$unwind'=> '$pictures'],
+                ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
+            ]);
+
+            $total = (int)@$arg['result'][0]['total'];
+            if($total==1){
+                break;
+            }
+
+            $this->collection->update(['_id'=> $id, 'type'=> 'gallery'], ['$pull'=> ['pictures'=> ['id'=> $value]]]);
+            $res[] = $value;
+        }
+
+        return $res;
     }
 
     public function delete($id){

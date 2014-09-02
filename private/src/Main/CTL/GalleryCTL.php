@@ -42,6 +42,22 @@ class GalleryCTL extends BaseCTL {
      * @uri /[h:id]/picture
      */
     public function getPicture(){
-        return $this->getService()->get($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+        return $this->getService()->getPictures($this->reqInfo->urlParam('id'), $this->reqInfo->params());
     }
-} 
+
+    /**
+     * @POST
+     * @uri /[h:id]/picture
+     */
+    public function postPicture(){
+        return $this->getService()->addPictures($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+    }
+
+    /**
+     * @DELETE
+     * @uri /[h:id]/picture
+     */
+    public function deletePicture(){
+        return $this->getService()->deletePictures($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+    }
+}

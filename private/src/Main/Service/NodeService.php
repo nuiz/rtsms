@@ -78,14 +78,14 @@ class NodeService extends BaseService {
             else if($item['type']=='product'){
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
                 $item['node'] = [
-                    'pictures'=> URL::absolute('/product/'.MongoHelper::standardId($item['_id']).'/children')
+                    'pictures'=> URL::absolute('/product/'.MongoHelper::standardId($item['_id']).'/picture')
                 ];
                 unset($item['pictures']);
             }
             else if($item['type']=='gallery') {
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
                 $item['node'] = [
-                    'pictures'=> URL::absolute('/gallery/'.MongoHelper::standardId($item['_id']).'/children')
+                    'pictures'=> URL::absolute('/gallery/'.MongoHelper::standardId($item['_id']).'/picture')
                 ];
                 unset($item['pictures']);
             }

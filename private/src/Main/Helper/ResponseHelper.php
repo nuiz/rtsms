@@ -50,4 +50,14 @@ class ResponseHelper {
             ]
         ];
     }
+
+    public static function requireAuthorize($message = 'Require authorized'){
+        return [
+            'error'=> [
+                'code'=> 402,
+                'message'=> $message,
+                'type'=> 'RequireAuthorized'
+            ]
+        ];
+    }
 }

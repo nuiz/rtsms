@@ -35,6 +35,7 @@ class RequestInfo {
         if($ctType=='application/json'){
             $jsonText = file_get_contents('php://input');
             $params = json_decode($jsonText, true);
+            $params = array_merge($_GET, $params);
         }
         else if($method=='POST'){
             $params = $_POST;

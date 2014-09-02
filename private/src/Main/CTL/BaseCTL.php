@@ -11,6 +11,7 @@ namespace Main\CTL;
 
 use Main\Context\Context;
 use Main\Context\ContextInterface;
+use Main\Helper\ResponseHelper;
 use Main\Http\RequestInfo;
 
 class BaseCTL {
@@ -32,6 +33,15 @@ class BaseCTL {
         }
         $this->ctx->setConsumerType($consumerType);
         $this->ctx->setLang($lang);
+
+        $token = isset($_SERVER['X-Auth-Token'])? $_SERVER['X-Auth-Token']: $reqInfo->input('access_token', false);
+        if($token){
+            $user = $this->ctx->setAccessToken($token);
+            if(!$user){
+                echo json_encode(ResponseHelper::notAuthorize());
+                exit();
+            }
+        }
     }
 
     public function getCtx(){

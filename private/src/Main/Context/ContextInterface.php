@@ -12,4 +12,5 @@ namespace Main\Context;
 interface ContextInterface extends LanguageInterface {
     public function getConsumerType();
     public function isAdminConsumer();
+    public function getUser();
 }

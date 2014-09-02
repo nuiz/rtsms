@@ -117,7 +117,7 @@ class ProductService extends BaseService {
 
     public function getPictures($id, $params){
         $id = MongoHelper::mongoId($id);
-        if($this->db->users->count(['_id'=> $id]) == 0){
+        if($this->collection->count(['_id'=> $id, 'type'=> 'product']) == 0){
             return ResponseHelper::notFound();
         }
 
@@ -126,7 +126,7 @@ class ProductService extends BaseService {
         $default = ["page"=> 1, "limit"=> 15];
         $options = array_merge($default, $params);
         $arg = $this->collection->aggregate([
-            ['$match'=> ['_id'=> $id]],
+            ['$match'=> ['_id'=> $id, 'type'=> 'product']],
             ['$project'=> ['pictures'=> 1]],
             ['$unwind'=> '$pictures'],
             ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
@@ -142,7 +142,7 @@ class ProductService extends BaseService {
             $data = [];
         }
         else {
-            $entity = $this->collection->findOne(['_id'=> $id], ['pictures'=> ['$slice'=> $slice]]);
+            $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'product'], ['pictures'=> ['$slice'=> $slice]]);
             $data = Image::loads($entity['pictures'])->toArrayResponse();
         }
 
@@ -158,6 +158,61 @@ class ProductService extends BaseService {
                 'limit'=> (int)$options['limit']
             )
         );
+    }
+
+    public function addPictures($id, $params){
+        $id = MongoHelper::mongoId($id);
+        $v = new Validator($params);
+        $v->rule('required', ['pictures']);
+        if(!$v->validate()){
+            return ResponseHelper::validateError($v->errors());
+        }
+
+        if($this->collection->count(['_id'=> $id, 'type'=> 'product']) == 0){
+            return ResponseHelper::notFound();
+        }
+
+        $res = [];
+        foreach($params['pictures'] as $value){
+            $img = Image::upload($value);
+            $this->collection->update(['_id'=> $id, 'type'=> 'product'], ['$push'=> ['pictures'=> $img->toArray()]]);
+            $res[] = $img->toArrayResponse();
+        }
+
+        return $res;
+    }
+
+    public function deletePictures($id, $params){
+        $id = MongoHelper::mongoId($id);
+        $v = new Validator($params);
+        $v->rule('required', ['id']);
+        if(!$v->validate()){
+            return ResponseHelper::validateError($v->errors());
+        }
+
+        if($this->collection->count(['_id'=> $id, 'type'=> 'product']) == 0){
+            return ResponseHelper::notFound();
+        }
+
+        $res = [];
+        foreach($params['id'] as $value){
+            $arg = $this->collection->aggregate([
+                ['$match'=> ['_id'=> $id, 'type'=> 'product']],
+                ['$project'=> ['pictures'=> 1]],
+                ['$unwind'=> '$pictures'],
+                ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
+            ]);
+
+            $total = (int)@$arg['result'][0]['total'];
+            if($total==1){
+                break;
+            }
+
+            $this->collection->update(['_id'=> $id, 'type'=> 'product'], ['$pull'=> ['pictures'=> ['id'=> $value]]]);
+            $res[] = $value;
+        }
+
+        return $res;
     }
 
     public function delete($id){

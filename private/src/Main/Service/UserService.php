@@ -128,7 +128,10 @@ class UserService extends BaseService {
     public function get($id){
         $id = MongoHelper::mongoId($id);
 
-        $entity = $this->collection->findOne(['_id'=> $id], $this->fields);
+        $fields = $this->fields;
+        unset($fields['password']);
+
+        $entity = $this->collection->findOne(['_id'=> $id], $fields);
         if(is_null($entity)){
             return ResponseHelper::notFound();
         }
