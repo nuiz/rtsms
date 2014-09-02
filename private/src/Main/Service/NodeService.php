@@ -11,14 +11,11 @@ namespace Main\Service;
 
 use Main\DataModel\Image;
 use Main\DB;
-use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
-use Main\Helper\ResponseHelper;
+use Main\Helper\NodeHelper;
 use Main\Helper\URL;
-use Valitron\Validator;
 
 class NodeService extends BaseService {
-
     public function __construct($ctx){
         $this->setContext($ctx);
 
@@ -71,22 +68,16 @@ class NodeService extends BaseService {
         foreach($cursor as $item){
             if($item['type']=='folder'){
                 $item['thumb'] = Image::load($item['thumb'])->toArrayResponse();
-                $item['node'] = [
-                    'children'=> URL::absolute('/node/'.MongoHelper::standardId($item['_id'].'/children'))
-                ];
+                $item['node'] = NodeHelper::folder($item['_id']);
             }
             else if($item['type']=='product'){
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
-                $item['node'] = [
-                    'pictures'=> URL::absolute('/product/'.MongoHelper::standardId($item['_id']).'/picture')
-                ];
+                $item['node'] = NodeHelper::product($item['_id']);
                 unset($item['pictures']);
             }
             else if($item['type']=='gallery') {
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
-                $item['node'] = [
-                    'pictures'=> URL::absolute('/gallery/'.MongoHelper::standardId($item['_id']).'/picture')
-                ];
+                $item['node'] = NodeHelper::gallery($item['_id']);
                 unset($item['pictures']);
             }
             unset($item['parent']);

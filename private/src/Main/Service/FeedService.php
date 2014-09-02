@@ -16,28 +16,26 @@ use Main\Helper\MongoHelper;
 use Main\Helper\ResponseHelper;
 use Valitron\Validator;
 
-class ActivityService extends BaseService {
-    protected $fields = ['name', 'message', 'datetime', 'thumb'];
+class FeedService extends BaseService {
+    protected $fields = ['name', 'message', 'thumb'];
 
     public function __construct($ctx){
         $this->setContext($ctx);
 
         $this->db = DB::getDB();
-        $this->collection = $this->db->activity;
+        $this->collection = $this->db->feed;
     }
 
-    public function add($params){
+    public function addNews($params){
         $v = new Validator($params);
-        $v->rule('required', ['name', 'message', 'datetime', 'thumb']);
-        $v->rule('date', ['datetime']);
+        $v->rule('required', ['name', 'message', 'thumb']);
 
         if(!$v->validate()){
             return ResponseHelper::validateError($v->errors());
         }
 
-        $insert = ArrayHelper::filterKey(['name', 'message', 'datetime', 'thumb'], $params);
+        $insert = ArrayHelper::filterKey(['name', 'message', 'thumb'], $params);
         $insert['thumb'] = Image::upload($params['thumb'])->toArray();
-        $insert['datetime'] = new \MongoDate($insert['datetime']);
 
         // insert created_at, updated_at
         $insert['created_at'] = new \MongoDate();
@@ -52,18 +50,14 @@ class ActivityService extends BaseService {
         $id = MongoHelper::mongoId($id);
 
         $v = new Validator($params);
-        $v->rule('date', ['datetime']);
 
         if(!$v->validate()){
             return ResponseHelper::validateError($v->errors());
         }
 
-        $set = ArrayHelper::filterKey(['name', 'message', 'datetime', 'thumb'], $params);
+        $set = ArrayHelper::filterKey(['name', 'message', 'thumb'], $params);
         if(isset($set['thumb'])){
             $set['thumb'] = Image::upload($params['thumb'])->toArray();
-        }
-        if(isset($set['datetime'])){
-            $set['datetime'] = new \MongoDate($set['datetime']);
         }
         if(count($set) > 0){
             // update updated_at
@@ -71,6 +65,10 @@ class ActivityService extends BaseService {
             $this->collection->update(['_id'=> $id], ['$set'=> $set]);
         }
         return $this->get($id);
+    }
+
+    public function addActivity($id, $type, $created_at){
+
     }
 
     public function get($id){

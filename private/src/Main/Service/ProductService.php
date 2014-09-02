@@ -13,7 +13,9 @@ use Main\DataModel\Image;
 use Main\DB;
 use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
+use Main\Helper\NodeHelper;
 use Main\Helper\ResponseHelper;
+use Main\Helper\URL;
 use Valitron\Validator;
 
 class ProductService extends BaseService {
@@ -40,6 +42,7 @@ class ProductService extends BaseService {
 //        }
 
         MongoHelper::standardIdEntity($entity);
+        $entity['node'] = NodeHelper::product($entity['id']);
         return $entity;
     }
 

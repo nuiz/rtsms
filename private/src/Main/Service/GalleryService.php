@@ -13,7 +13,9 @@ use Main\DataModel\Image;
 use Main\DB;
 use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
+use Main\Helper\NodeHelper;
 use Main\Helper\ResponseHelper;
+use Main\Helper\URL;
 use Valitron\Validator;
 
 class GalleryService extends BaseService {
@@ -41,6 +43,8 @@ class GalleryService extends BaseService {
 //        }
 
         MongoHelper::standardIdEntity($entity);
+        $entity['node'] = NodeHelper::gallery($entity['id']);
+
         return $entity;
     }
 
