@@ -49,7 +49,7 @@ class GalleryService extends BaseService {
             ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
         ]);
         $entity['picture_length'] = (int)@$arg['result'][0]['total'];
-        $entity['node'] = NodeHelper::gallery($entity['id']);
+        $entity['node'] = NodeHelper::gallery($entity['_id']);
 
         MongoHelper::standardIdEntity($entity);
 

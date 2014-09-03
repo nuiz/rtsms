@@ -38,6 +38,14 @@ class GalleryCTL extends BaseCTL {
     }
 
     /**
+     * @DELETE
+     * @uri /[h:id]
+     */
+    public function delete(){
+        return $this->getService()->delete($this->reqInfo->urlParam('id'));
+    }
+
+    /**
      * @GET
      * @uri /[h:id]/picture
      */

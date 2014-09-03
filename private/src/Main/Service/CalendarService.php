@@ -67,7 +67,7 @@ class CalendarService extends BaseService {
             $days[] = [
                 'date'=> $ym.'-'.$d,
                 'length'=> count($activity),
-                'items'=> $activity
+                'data'=> $activity
             ];
         }
         return ['data'=> $days];

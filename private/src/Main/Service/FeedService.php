@@ -67,9 +67,11 @@ class FeedService extends BaseService {
         foreach($cursor as $item){
             if($item['type']=='news'){
                 $item = NewsService::instance($this->getContext())->get($item['_id']);
+                $item['type'] = 'news';
             }
-            if($item['type']=='activity'){
+            else if($item['type']=='activity'){
                 $item = ActivityService::instance($this->getContext())->get($item['_id']);
+                $item['type'] = 'activity';
             }
             $data[] = $item;
         }
