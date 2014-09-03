@@ -123,4 +123,86 @@ class NewsService extends BaseService {
 
         return ['success'=> true];
     }
+
+    // ***************** comments ***********************
+
+    public function addComment($id, $params){
+        $id = MongoHelper::mongoId($id);
+        $v = new Validator($params);
+        $v->rule('required', ['message']);
+
+        $user = $this->getContext()->getUser();
+        if(is_null($user)){
+            return ResponseHelper::requireAuthorize();
+        }
+
+        if(!$v->validate()){
+            return ResponseHelper::validateError($v->errors());
+        }
+
+        $entity = $this->collection->findOne(['_id'=> $id], ['comments']);
+        if(is_null($entity)){
+            return ResponseHelper::notFound();
+        }
+        if(!isset($entity['comments'])){
+            $this->collection->update(['_id'=> $id], ['comments'=> []]);
+        }
+
+        $comment = [
+            'user_id'=> $user['_id'],
+            'message'=> $params['message'],
+            'created_at'=> new \MongoTimestamp()
+        ];
+
+        $this->collection->update(['_id'=> $id], ['$push'=> ['comments'=> $comment]]);
+        MongoHelper::standardIdEntity($comment);
+        $comment['created_at'] = MongoHelper::timeToStr($comment['created_at']);
+
+        return $comment;
+    }
+
+    public function getComments($id, $params){
+//        $id = MongoHelper::mongoId($id);
+//        if($this->collection->count(['_id'=> $id, 'type'=> 'gallery']) == 0){
+//            return ResponseHelper::notFound();
+//        }
+//
+////        $this->collection->update(['_id'=> $id], ['$setOnInsert'=> ['history'=> []]], ['upsert'=> true]);
+//
+//        $default = ["page"=> 1, "limit"=> 15];
+//        $options = array_merge($default, $params);
+//        $arg = $this->collection->aggregate([
+//            ['$match'=> ['_id'=> $id, 'type'=> 'gallery']],
+//            ['$project'=> ['pictures'=> 1]],
+//            ['$unwind'=> '$pictures'],
+//            ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
+//        ]);
+//
+//        $total = (int)@$arg['result'][0]['total'];
+//        $limit = (int)$options['limit'];
+//        $page = (int)$options['page'];
+//
+//        $slice = MongoHelper::createSlice($page, $limit, $total);
+//
+//        if($slice[1] == 0){
+//            $data = [];
+//        }
+//        else {
+//            $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'gallery'], ['pictures'=> ['$slice'=> $slice]]);
+//            $data = Image::loads($entity['pictures'])->toArrayResponse();
+//        }
+//
+//        // reverse data
+//        $data = array_reverse($data);
+//
+//        return array(
+//            'length'=> count($data),
+//            'total'=> $total,
+//            'data'=> $data,
+//            'paging'=> array(
+//                'page'=> (int)$options['page'],
+//                'limit'=> (int)$options['limit']
+//            )
+//        );
+    }
 }
