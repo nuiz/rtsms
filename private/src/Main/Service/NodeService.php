@@ -62,7 +62,7 @@ class NodeService extends BaseService {
             ->find($condition, ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'thumb'=> 1, 'price'=> 1, 'type'=> 1])
             ->limit((int)$options['limit'])
             ->skip((int)$skip)
-            ->sort(['created_at'=> -1]);
+            ->sort(['seq'=> -1]);
 
         $data = [];
         foreach($cursor as $item){
