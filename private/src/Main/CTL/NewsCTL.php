@@ -60,4 +60,22 @@ class NewsCTL extends BaseCTL {
     public function delete(){
         return $this->getService()->delete($this->reqInfo->urlParam('id'));
     }
-} 
+
+    /////////////////////// News Comment /////////////////////////
+
+    /**
+     * @POST
+     * @uri /[h:id]/comment
+     */
+    public function addComment(){
+        return $this->getService()->addComment($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+    }
+
+    /**
+     * @GET
+     * @uri /[h:id]/comment
+     */
+    public function getComments(){
+        return $this->getService()->getComments($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+    }
+}

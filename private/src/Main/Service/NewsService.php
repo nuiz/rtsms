@@ -145,64 +145,72 @@ class NewsService extends BaseService {
             return ResponseHelper::notFound();
         }
         if(!isset($entity['comments'])){
-            $this->collection->update(['_id'=> $id], ['comments'=> []]);
+            $this->collection->update(['_id'=> $id], ['$set'=>['comments'=> []]]);
         }
 
         $comment = [
+            'id'=> new \MongoId(),
             'user_id'=> $user['_id'],
             'message'=> $params['message'],
             'created_at'=> new \MongoTimestamp()
         ];
 
         $this->collection->update(['_id'=> $id], ['$push'=> ['comments'=> $comment]]);
-        MongoHelper::standardIdEntity($comment);
+//        MongoHelper::standardIdEntity($comment);
+        $comment['id'] = MongoHelper::standardId($comment['id']);
+        $comment['user_id'] = MongoHelper::standardId($comment['user_id']);
         $comment['created_at'] = MongoHelper::timeToStr($comment['created_at']);
 
         return $comment;
     }
 
     public function getComments($id, $params){
-//        $id = MongoHelper::mongoId($id);
-//        if($this->collection->count(['_id'=> $id, 'type'=> 'gallery']) == 0){
-//            return ResponseHelper::notFound();
-//        }
-//
-////        $this->collection->update(['_id'=> $id], ['$setOnInsert'=> ['history'=> []]], ['upsert'=> true]);
-//
-//        $default = ["page"=> 1, "limit"=> 15];
-//        $options = array_merge($default, $params);
-//        $arg = $this->collection->aggregate([
-//            ['$match'=> ['_id'=> $id, 'type'=> 'gallery']],
-//            ['$project'=> ['pictures'=> 1]],
-//            ['$unwind'=> '$pictures'],
-//            ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
-//        ]);
-//
-//        $total = (int)@$arg['result'][0]['total'];
-//        $limit = (int)$options['limit'];
-//        $page = (int)$options['page'];
-//
-//        $slice = MongoHelper::createSlice($page, $limit, $total);
-//
-//        if($slice[1] == 0){
-//            $data = [];
-//        }
-//        else {
-//            $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'gallery'], ['pictures'=> ['$slice'=> $slice]]);
-//            $data = Image::loads($entity['pictures'])->toArrayResponse();
-//        }
-//
-//        // reverse data
-//        $data = array_reverse($data);
-//
-//        return array(
-//            'length'=> count($data),
-//            'total'=> $total,
-//            'data'=> $data,
-//            'paging'=> array(
-//                'page'=> (int)$options['page'],
-//                'limit'=> (int)$options['limit']
-//            )
-//        );
+        $id = MongoHelper::mongoId($id);
+        if($this->collection->count(['_id'=> $id]) == 0){
+            return ResponseHelper::notFound();
+        }
+
+        $default = ["page"=> 1, "limit"=> 15];
+        $options = array_merge($default, $params);
+        $arg = $this->collection->aggregate([
+            ['$match'=> ['_id'=> $id]],
+            ['$project'=> ['comments'=> 1]],
+            ['$unwind'=> '$comments'],
+            ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
+        ]);
+
+        $total = (int)@$arg['result'][0]['total'];
+        $limit = (int)$options['limit'];
+        $page = (int)$options['page'];
+
+        $slice = MongoHelper::createSlice($page, $limit, $total);
+
+        if($slice[1] == 0){
+            $data = [];
+        }
+        else {
+            $entity = $this->collection->findOne(['_id'=> $id], ['pictures'=> ['$slice'=> $slice]]);
+            $data = [];
+            foreach($entity['comments'] as $key=> $value){
+                $comment = $value;
+                $comment['id'] = MongoHelper::standardId($comment['id']);
+                $comment['user_id'] = MongoHelper::standardId($comment['user_id']);
+                $comment['created_at'] = MongoHelper::timeToStr($comment['created_at']);
+                $data[] = $comment;
+            }
+        }
+
+        // reverse data
+        $data = array_reverse($data);
+
+        return [
+            'length'=> count($data),
+            'total'=> $total,
+            'data'=> $data,
+            'paging'=> [
+                'page'=> (int)$options['page'],
+                'limit'=> (int)$options['limit']
+            ]
+        ];
     }
 }

@@ -79,7 +79,7 @@ class RequestInfo {
 
     public function input($name, $default = null)
     {
-        return isset($this->inputs[$name])? $this->params[$name]: $default;
+        return isset($this->inputs[$name])? $this->inputs[$name]: $default;
     }
 
     public function hasInput($name){
