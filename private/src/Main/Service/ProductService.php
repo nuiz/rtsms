@@ -31,7 +31,7 @@ class ProductService extends BaseService {
     public function get($id){
         $id = MongoHelper::mongoId($id);
         $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'product'],
-            ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'price'=> 1, 'parent']);
+            ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'price'=> 1, 'parent'=> 1]);
         if(is_null($entity)){
             return ResponseHelper::notFound();
         }
