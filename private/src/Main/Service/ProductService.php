@@ -31,7 +31,7 @@ class ProductService extends BaseService {
     public function get($id){
         $id = MongoHelper::mongoId($id);
         $entity = $this->collection->findOne(['_id'=> $id, 'type'=> 'product'],
-            ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'price'=> 1]);
+            ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'price'=> 1, 'parent']);
         if(is_null($entity)){
             return ResponseHelper::notFound();
         }
@@ -40,6 +40,12 @@ class ProductService extends BaseService {
 //        foreach($entity['pictures'] as $key=> $value){
 //            $entity['pictures'][$key] = Image::load($value)->toArrayResponse();
 //        }
+
+        // set parent_id
+        if(!is_null($entity['parent'])){
+            $entity['parent_id'] = MongoHelper::standardId($entity['parent']['id']);
+        }
+        unset($entity['parent']);
 
         MongoHelper::standardIdEntity($entity);
         $entity['node'] = NodeHelper::product($entity['id']);

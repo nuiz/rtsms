@@ -31,18 +31,26 @@ class CalendarService extends BaseService {
     }
 
     public function gets($options){
+//        $default = [
+//            'year'=> date('Y'),
+//            'month'=> date('m'),
+//        ];
+//        $options = array_merge($default, $options);
+//        $options['month'] = sprintf('%02s', $options['month']);
+//
+//        $ym = $options['year'].'-'.$options['month'];
+//        $lastDay = date('t', strtotime($ym.'-01'));
+//
+//        $dateStart = new \MongoTimestamp(strtotime($ym.'-01'));
+//        $dateEnd = new \MongoTimestamp(strtotime($ym.'-'.$lastDay));
+
         $default = [
-            'year'=> date('Y'),
-            'month'=> date('m'),
+            'start_date'=> date('Y-m-01'),
+            'end_date'=> date('Y-m-t'),
         ];
         $options = array_merge($default, $options);
-        $options['month'] = sprintf('%02s', $options['month']);
-
-        $ym = $options['year'].'-'.$options['month'];
-        $lastDay = date('t', strtotime($ym.'-01'));
-
-        $dateStart = new \MongoTimestamp(strtotime($ym.'-01'));
-        $dateEnd = new \MongoTimestamp(strtotime($ym.'-'.$lastDay));
+        $dateStart = new \MongoTimestamp(strtotime($options['start_date']));
+        $dateEnd = new \MongoTimestamp(strtotime($options['end_date']));
 
         $items = [];
         $cursor = $this->collection->find(['datetime'=> ['$gte'=> $dateStart, '$lt'=> $dateEnd]],
@@ -54,6 +62,8 @@ class CalendarService extends BaseService {
             $items[] = $item;
         }
 
+        $ym = date("Y-m", $dateStart->sec);
+        $lastDay = (int)date("t", $dateStart->sec);
         $days = [];
         for($i=1; $i<= $lastDay; $i++){
             $activity = [];

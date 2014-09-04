@@ -38,6 +38,14 @@ class GalleryCTL extends BaseCTL {
     }
 
     /**
+     * @PUT
+     * @uri /[h:id]
+     */
+    public function edit(){
+        return $this->getService()->edit($this->reqInfo->urlParam('id'), $this->reqInfo->params());
+    }
+
+    /**
      * @DELETE
      * @uri /[h:id]
      */

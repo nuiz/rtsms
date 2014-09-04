@@ -59,7 +59,7 @@ class NodeService extends BaseService {
         }
 
         $cursor = $this->collection
-            ->find($condition, ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'thumb'=> 1, 'price'=> 1, 'type'=> 1])
+            ->find($condition, ['pictures'=> ['$slice'=> [0, 1]], 'name'=> 1, 'detail'=> 1, 'thumb'=> 1, 'price'=> 1, 'type'=> 1, 'parent'=> 1])
             ->limit((int)$options['limit'])
             ->skip((int)$skip)
             ->sort(['seq'=> -1]);
@@ -84,6 +84,12 @@ class NodeService extends BaseService {
                     ['$group'=> ['_id'=> null, 'total'=> ['$sum'=> 1]]]
                 ]);
                 $item['picture_length'] = (int)@$arg['result'][0]['total'];
+
+
+                // set parent_id
+                if(!is_null($item['parent'])){
+                    $item['parent_id'] = MongoHelper::standardId($item['parent']['id']);
+                }
             }
             else if($item['type']=='gallery') {
                 $item['thumb'] = Image::load($item['pictures'][0])->toArrayResponse();
