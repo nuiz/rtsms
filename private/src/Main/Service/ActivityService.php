@@ -172,7 +172,13 @@ class ActivityService extends BaseService {
         $this->collection->update(['_id'=> $id], ['$push'=> ['comments'=> $comment]]);
 //        MongoHelper::standardIdEntity($comment);
         $comment['id'] = MongoHelper::standardId($comment['id']);
-        $comment['user_id'] = MongoHelper::standardId($comment['user_id']);
+//                $comment['user_id'] = MongoHelper::standardId($comment['user_id']);
+
+        $comment['user'] = $this->db->users->findOne(['_id'=> $comment['user_id']], ['display_name', 'picture']);
+        $comment['user']['picture'] = Image::load($comment['user']['picture'])->toArrayResponse();
+        MongoHelper::standardIdEntity($comment['user']);
+        unset($comment['user_id']);
+
         $comment['created_at'] = MongoHelper::timeToStr($comment['created_at']);
 
         return $comment;
