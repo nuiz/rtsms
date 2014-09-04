@@ -14,6 +14,7 @@ use Main\DB;
 use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
 use Main\Helper\ResponseHelper;
+use Main\Helper\URL;
 use Valitron\Validator;
 
 class NewsService extends BaseService {
@@ -189,12 +190,18 @@ class NewsService extends BaseService {
             $data = [];
         }
         else {
-            $entity = $this->collection->findOne(['_id'=> $id], ['pictures'=> ['$slice'=> $slice]]);
+            $entity = $this->collection->findOne(['_id'=> $id], ['comments'=> ['$slice'=> $slice]]);
             $data = [];
             foreach($entity['comments'] as $key=> $value){
                 $comment = $value;
                 $comment['id'] = MongoHelper::standardId($comment['id']);
-                $comment['user_id'] = MongoHelper::standardId($comment['user_id']);
+//                $comment['user_id'] = MongoHelper::standardId($comment['user_id']);
+
+                $comment['user'] = $this->db->users->findOne(['_id'=> $comment['user_id']], ['display_name', 'picture']);
+                $comment['user']['picture'] = Image::load($comment['user']['picture'])->toArrayResponse();
+                MongoHelper::standardIdEntity($comment['user']);
+                unset($comment['user_id']);
+
                 $comment['created_at'] = MongoHelper::timeToStr($comment['created_at']);
                 $data[] = $comment;
             }
@@ -203,7 +210,9 @@ class NewsService extends BaseService {
         // reverse data
         $data = array_reverse($data);
 
-        return [
+        $nextQueryString = http_build_query(['page'=> (int)$options['page']+1, 'limit'=> (int)$options['limit']]);
+
+        $res = [
             'length'=> count($data),
             'total'=> $total,
             'data'=> $data,
@@ -212,5 +221,10 @@ class NewsService extends BaseService {
                 'limit'=> (int)$options['limit']
             ]
         ];
+        if(((int)$options['page'] * (int)$options['limit']) < $total){
+            $res['paging']['next'] = URL::absolute('/news/'.MongoHelper::standardId($id).'/comment?'.$nextQueryString);
+        }
+
+        return $res;
     }
 }

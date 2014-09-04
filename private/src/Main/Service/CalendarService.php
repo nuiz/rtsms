@@ -62,24 +62,28 @@ class CalendarService extends BaseService {
             $items[] = $item;
         }
 
-        $ym = date("Y-m", $dateStart->sec);
-        $lastDay = (int)date("t", $dateStart->sec);
+//        $ym = date("Y-m", $dateStart->sec);
+//        $lastDay = (int)date("t", $dateStart->sec);
         $days = [];
-        for($i=1; $i<= $lastDay; $i++){
+        for($start = $dateStart->sec; $start <= $dateEnd->sec; $start += (60*60*24)){
             $activity = [];
-            $d = sprintf('%02s', $i);
+//            $d = sprintf('%02s', $i);
             foreach($items as $item){
                 $time = strtotime($item['datetime']);
-                if($time >= strtotime($ym.'-'.$d.' 00:00:01') && $time <= strtotime($ym.'-'.$d.' 23:59:59')){
+                if($time >= $start && $time <= $start+(60*60*24)){
                     $activity[] = $item;
                 }
             }
             $days[] = [
-                'date'=> $ym.'-'.$d,
+                'date'=> date('Y-m-d', $start),
                 'length'=> count($activity),
+                'has_data'=> count($activity) > 0? "yes": "no",
                 'data'=> $activity
             ];
         }
-        return ['data'=> $days];
+        return [
+            'length'=> count($days),
+            'data'=> $days
+        ];
     }
 }
