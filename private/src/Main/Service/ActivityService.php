@@ -229,8 +229,6 @@ class ActivityService extends BaseService {
         // reverse data
         $data = array_reverse($data);
 
-        $nextQueryString = http_build_query(['page'=> (int)$options['page']+1, 'limit'=> (int)$options['limit']]);
-
         $res = [
             'length'=> count($data),
             'total'=> $total,
@@ -240,7 +238,14 @@ class ActivityService extends BaseService {
                 'limit'=> (int)$options['limit']
             ]
         ];
+        $pagingLength = $total/(int)$options['limit'];
+        if(is_float($pagingLength)){
+            $pagingLength = floor($pagingLength) + 1;
+        }
+        $res['paging']['length'] = $pagingLength;
+        $res['paging']['current'] = (int)$options['page'];
         if(((int)$options['page'] * (int)$options['limit']) < $total){
+            $nextQueryString = http_build_query(['page'=> (int)$options['page']+1, 'limit'=> (int)$options['limit']]);
             $res['paging']['next'] = URL::absolute('/activity/'.MongoHelper::standardId($id).'/comment?'.$nextQueryString);
         }
 

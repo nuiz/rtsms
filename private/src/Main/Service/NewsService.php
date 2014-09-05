@@ -216,8 +216,6 @@ class NewsService extends BaseService {
         // reverse data
         $data = array_reverse($data);
 
-        $nextQueryString = http_build_query(['page'=> (int)$options['page']+1, 'limit'=> (int)$options['limit']]);
-
         $res = [
             'length'=> count($data),
             'total'=> $total,
@@ -227,7 +225,14 @@ class NewsService extends BaseService {
                 'limit'=> (int)$options['limit']
             ]
         ];
+        $pagingLength = 20/10;
+        if(is_float($pagingLength)){
+            $pagingLength = floor($pagingLength) + 1;
+        }
+        $res['paging']['length'] = $pagingLength;
+        $res['paging']['current'] = (int)$options['page'];
         if(((int)$options['page'] * (int)$options['limit']) < $total){
+            $nextQueryString = http_build_query(['page'=> (int)$options['page']+1, 'limit'=> (int)$options['limit']]);
             $res['paging']['next'] = URL::absolute('/news/'.MongoHelper::standardId($id).'/comment?'.$nextQueryString);
         }
 
