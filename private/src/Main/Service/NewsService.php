@@ -225,10 +225,8 @@ class NewsService extends BaseService {
                 'limit'=> (int)$options['limit']
             ]
         ];
-        $pagingLength = 20/10;
-        if(is_float($pagingLength)){
-            $pagingLength = floor($pagingLength) + 1;
-        }
+        $pagingLength = $total/(int)$options['limit'];
+        $pagingLength = floor($pagingLength) + 1;
         $res['paging']['length'] = $pagingLength;
         $res['paging']['current'] = (int)$options['page'];
         if(((int)$options['page'] * (int)$options['limit']) < $total){

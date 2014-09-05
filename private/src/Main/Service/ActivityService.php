@@ -239,9 +239,7 @@ class ActivityService extends BaseService {
             ]
         ];
         $pagingLength = $total/(int)$options['limit'];
-        if(is_float($pagingLength)){
-            $pagingLength = floor($pagingLength) + 1;
-        }
+        $pagingLength = floor($pagingLength) + 1;
         $res['paging']['length'] = $pagingLength;
         $res['paging']['current'] = (int)$options['page'];
         if(((int)$options['page'] * (int)$options['limit']) < $total){

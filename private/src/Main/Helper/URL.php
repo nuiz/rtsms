@@ -11,7 +11,7 @@ namespace Main\Helper;
 
 class URL {
     public static function absolute($url){
-        return "http://192.168.0.111/rtsms".$url;
+        return "http://rtsms-api.pla2app.com".$url;
     }
 
     public static function share($url){
