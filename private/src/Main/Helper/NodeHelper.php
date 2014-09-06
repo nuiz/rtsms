@@ -31,4 +31,18 @@ class NodeHelper {
             'share'=> URL::share('/gallery/'.$id)
         ];
     }
+
+    public static function activity($id){
+        $id = MongoHelper::standardId($id);
+        return [
+            'share'=> URL::share('/activity/'.$id)
+        ];
+    }
+
+    public static function news($id){
+        $id = MongoHelper::standardId($id);
+        return [
+            'share'=> URL::share('/news/'.$id)
+        ];
+    }
 }

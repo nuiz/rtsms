@@ -13,6 +13,7 @@ use Main\DataModel\Image;
 use Main\DB;
 use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
+use Main\Helper\NodeHelper;
 use Main\Helper\ResponseHelper;
 use Main\Helper\URL;
 use Valitron\Validator;
@@ -99,6 +100,7 @@ class NewsService extends BaseService {
         $entity = $this->collection->findOne(['_id'=> $id], $this->fields);
         $entity['thumb'] = Image::load($entity['thumb'])->toArrayResponse();
         MongoHelper::standardIdEntity($entity);
+        $entity['node'] = NodeHelper::news($id);
         return $entity;
     }
 

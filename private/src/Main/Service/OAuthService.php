@@ -50,6 +50,9 @@ class OAuthService extends BaseService {
         if(is_null($entity)){
             $entity = $this->createUser($fData);
         }
+        if($entity['fb_name'] != $fData['name']){
+            $this->db->users->update(['fb_id'=> $fData['id']], ['$set'=> ['fb_name'=> $fData['name']]]);
+        }
 
         $tokenEntity = $this->getTokenByUserId($entity['_id']);
 
@@ -117,7 +120,7 @@ class OAuthService extends BaseService {
     public function createUser($fData){
         $entity['username'] = $fData['id'];
         $entity['fb_id'] = $fData['id'];
-        $entity['fb_name'] = $fData['id'];
+        $entity['fb_name'] = $fData['name'];
         $entity['gender'] = $fData['gender'];
         $entity['email'] = $fData['email'];
         $entity['display_name'] = $fData['name'];

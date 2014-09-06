@@ -13,6 +13,7 @@ use Main\DataModel\Image;
 use Main\DB;
 use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
+use Main\Helper\NodeHelper;
 use Main\Helper\ResponseHelper;
 use Main\Helper\URL;
 use Valitron\Validator;
@@ -89,6 +90,7 @@ class ActivityService extends BaseService {
         $entity['thumb'] = Image::load($entity['thumb'])->toArrayResponse();
         $entity['datetime'] = MongoHelper::timeToStr($entity['datetime']);
         MongoHelper::standardIdEntity($entity);
+        $entity['node'] = NodeHelper::activity($id);
         return $entity;
     }
 
