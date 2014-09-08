@@ -35,7 +35,6 @@ class NotifyHelper {
     }
 
     public static function sendAll($objectId, $type, $header, $message){
-        $objectId = MongoHelper::standardId($objectId);
         $db = DB::getDB();
         $users = $db->users->find([], ['setting']);
         foreach($users as $item){
@@ -101,8 +100,8 @@ class NotifyHelper {
 
     public static function create($objectId, $type, $header, $message, $userId){
         $db = DB::getDB();
-        $objectId = MongoHelper::standardId($objectId);
-        $userId = MongoHelper::standardId($userId);
+        $objectId = MongoHelper::mongoId($objectId);
+        $userId = MongoHelper::mongoId($userId);
 
         $now = new \MongoTimestamp();
         $entity = array(

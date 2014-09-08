@@ -40,6 +40,7 @@ class OAuthCTL extends BaseCTL {
 
     /**
      * @POST
+     * @GET
      * @uri /logout
      */
     public function logout(){
