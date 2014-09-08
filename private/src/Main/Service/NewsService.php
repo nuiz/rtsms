@@ -76,6 +76,7 @@ class NewsService extends BaseService {
         $data = [];
         foreach($cursor as $item){
             $item['thumb'] = Image::load($item['thumb'])->toArrayResponse();
+            $item['node'] = NodeHelper::news($item['_id']);
             MongoHelper::standardIdEntity($item);
             $data[] = $item;
         }

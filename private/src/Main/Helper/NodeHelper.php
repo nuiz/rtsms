@@ -20,7 +20,7 @@ class NodeHelper {
         $id = MongoHelper::standardId($id);
         return [
             'pictures'=> URL::absolute('/product/'.$id.'/picture'),
-            'share'=> URL::share('/product?id='.$id)
+            'share'=> URL::share('/product.php?id='.$id)
         ];
     }
 
@@ -35,14 +35,14 @@ class NodeHelper {
     public static function activity($id){
         $id = MongoHelper::standardId($id);
         return [
-            'share'=> URL::share('/activity?id='.$id)
+            'share'=> URL::share('/activity.php?id='.$id)
         ];
     }
 
     public static function news($id){
         $id = MongoHelper::standardId($id);
         return [
-            'share'=> URL::share('/news?id='.$id)
+            'share'=> URL::share('/news.php?id='.$id)
         ];
     }
 }

@@ -114,6 +114,7 @@ class ActivityService extends BaseService {
         foreach($cursor as $item){
             $item['thumb'] = Image::load($item['thumb'])->toArrayResponse();
             $item['datetime'] = MongoHelper::timeToStr($item['datetime']);
+            $item['node'] = NodeHelper::activity($item['_id']);
             MongoHelper::standardIdEntity($item);
             $data[] = $item;
         }
