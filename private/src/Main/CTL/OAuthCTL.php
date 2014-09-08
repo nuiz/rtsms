@@ -40,6 +40,14 @@ class OAuthCTL extends BaseCTL {
 
     /**
      * @POST
+     * @uri /logout
+     */
+    public function logout(){
+        return $this->getService()->logout($this->reqInfo->inputs());
+    }
+
+    /**
+     * @POST
      * @uri /admin
      */
     public function admin(){

@@ -88,7 +88,7 @@ class UserStampService extends BaseService {
 
         $this->userHisService->add($id, [
             'title'=> 'ได้รับคะแนนเพิ่ม',
-            'message'=> 'ได้ระคะแนนเพิ่ม '.$params['point'].' แต้ม'
+            'message'=> 'ได้รับคะแนนเพิ่ม '.$params['point'].' แต้ม'
         ]);
 
         return $this->get($id);
@@ -130,7 +130,7 @@ class UserStampService extends BaseService {
         $this->db->users->update(['_id'=> $uid], ['$set'=> ['stamp'=> $stamp]]);
         $this->userHisService->add($id, [
             'title'=> 'แลกของรางวัล',
-            'message'=> 'แลกรางวัล '.$reward['name'].' ด้วยคะแนน '.$params['point'].' แต้ม'
+            'message'=> 'แลกของรางวัล '.$reward['name'].' ด้วยคะแนน '.$params['point'].' แต้ม'
         ]);
 
         return $stamp;

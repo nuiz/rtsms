@@ -11,9 +11,11 @@ namespace Main\Service;
 
 use Main\DataModel\Image;
 use Main\DB;
+use Main\Event\Event;
 use Main\Helper\ArrayHelper;
 use Main\Helper\MongoHelper;
 use Main\Helper\NodeHelper;
+use Main\Helper\NotifyHelper;
 use Main\Helper\ResponseHelper;
 use Main\Helper\URL;
 use Valitron\Validator;
@@ -54,6 +56,11 @@ class ActivityService extends BaseService {
 
         $this->collection->insert($insert);
         FeedService::instance($this->getContext())->add($insert['_id'], 'activity', $insert['created_at']);
+
+        // notify
+        Event::add('after_response', function() use($insert){
+            NotifyHelper::sendAll($insert['_id'], 'activity', 'ได้เพิ่มกิจกรรม', $insert['detail']);
+        });
 
         return $this->get($insert['_id']);
     }

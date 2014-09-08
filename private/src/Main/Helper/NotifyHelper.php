@@ -21,79 +21,98 @@ class NotifyHelper {
         return self::$apnHelper;
     }
 
-    public static function sendAll($objectId, $header, $message){
-        $db = DB::getDB();
-        $cDevices = $db->devices->find();
-        foreach($cDevices as $item){
-            $entity = self::create($objectId, $header, $message, $item['key'], $item['type']);
-
-            $entity['object']['id'] = $entity['object']['_id']->{'$id'};
-            $entity['id'] = $entity['_id']->{'$id'};
-            //$deepLink = URL::absolute('/notify/'.$entity['id']);
-            $objectUrl = URL::absolute('/news/'.$entity['object']['id']);
-
-            // if not admin not push to device
-            if(!$item['admit'])
-                continue;
-
+    public static function cutMessage($message){
+        $pushMessage = $message;
+        if(is_array($pushMessage)){
             $pushMessage = $message;
-            if(is_array($pushMessage)){
-                $pushMessage = $message;
-            }
+        }
 
-            if(strlen(utf8_encode($pushMessage)) > 120){
-                $pushMessage = mb_substr($pushMessage, 0, 18, 'utf-8').'...';
-            }
+        if(strlen(utf8_encode($pushMessage)) > 120){
+            $pushMessage = mb_substr($pushMessage, 0, 18, 'utf-8').'...';
+        }
+
+        return $pushMessage;
+    }
+
+    public static function sendAll($objectId, $type, $header, $message){
+        $objectId = MongoHelper::standardId($objectId);
+        $db = DB::getDB();
+        $users = $db->users->find([], ['setting']);
+        foreach($users as $item){
+            $userId = MongoHelper::mongoId($item['_id']);
+            $entity = self::create($objectId, $type, $header, $message, $userId);
+
+            $entity['object']['id'] = MongoHelper::standardId($objectId);
+            $entity['id'] = MongoHelper::standardId($entity['_id']);
+
+//            $objectUrl = "";
+//            if($type == 'news'){
+//                $objectUrl = URL::absolute('/news/'.$entity['object']['id']);
+//            }
+//            else if($type == 'activity'){
+//                $objectUrl = URL::absolute('/activity/'.$entity['object']['id']);
+//            }
+//            else if($type == 'message'){
+//                $objectUrl = URL::absolute('/message/'.$entity['object']['id']);
+//            }
+
+            $pushMessage = self::cutMessage($message);
 
             $args = array(
                 'id'=> $entity['id'],
-                'object_id'=> $entity['object']['id']
+                'object_id'=> $entity['object']['id'],
+                'type'=> $type
             );
 
-            if($item['type']=='ios'){
-                try {
-                    self::getApnHelper()->send($item['key'], $pushMessage, $objectUrl);
-                }
-                catch (\Exception $e){
-                    error_log($e->getMessage());
+            if(!isset($item['setting']))
+                continue;
+
+            if(!$item['setting']['notify_update'] && $type != "message")
+                continue;
+
+            if(!$item['setting']['notify_message'] && $type == "message")
+                continue;
+
+            if(isset($item['ios_device_token'])){
+                foreach($item['ios_device_token'] as $token){
+//                    try {
+                        self::getApnHelper()->send($token, $pushMessage, $args);
+//                    }
+//                    catch (\Exception $e){
+//                        error_log($e->getMessage());
+//                    }
                 }
             }
-            else if($item['type']=='android'){
-                $gcmTokens = array($item['key']);
-                $obj = $args;
-                $obj['type'] = 'news';
-                try {
-                    GCMHerlper::send($gcmTokens, array(
-                        'message'=> $pushMessage,
-                        'object'=> $obj
-                    ));
-                }
-                catch(\Exception $e){
-                    error_log($e->getMessage());
+            if(isset($item['android_device_token'])){
+                foreach($item['android_device_token'] as $token){
+//                    try {
+                        GCMHerlper::send($token, array(
+                            'message'=> $pushMessage,
+                            'object'=> $args
+                        ));
+//                    }
+//                    catch(\Exception $e){
+//                        error_log($e->getMessage());
+//                    }
                 }
             }
         }
     }
 
-    public static function create($objectId, $header, $message, $deviceKey, $deviceType){
+    public static function create($objectId, $type, $header, $message, $userId){
         $db = DB::getDB();
-
-        if(!($objectId instanceof \MongoId)){
-            $objectId = new \MongoId($objectId);
-        }
+        $objectId = MongoHelper::standardId($objectId);
+        $userId = MongoHelper::standardId($userId);
 
         $now = new \MongoTimestamp();
         $entity = array(
             'preview_header'=> $header,
             'preview_content'=> $message,
             'object'=> array(
-                'type'=> 'news',
-                '_id'=> $objectId
+                'type'=> $type,
+                'id'=> $objectId
             ),
-            'device'=> array(
-                'key'=> $deviceKey,
-                'type'=> $deviceType
-            ),
+            'user_id'=> $userId,
             'opened'=> false,
             'created_at'=> $now
         );

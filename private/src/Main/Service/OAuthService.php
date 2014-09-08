@@ -58,10 +58,10 @@ class OAuthService extends BaseService {
 
         // remember device token
         if(isset($params['ios_device_token'])){
-            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['ios_device_token'=> $params['ios_device_token'] ]]);
+            $this->db->users->update(['_id'=> $entity['_id']], ['$addToSet'=> ['ios_device_token'=> $params['ios_device_token'] ]]);
         }
         if(isset($params['android_device_token'])){
-            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['android_device_token'=> $params['android_device_token'] ]]);
+            $this->db->users->update(['_id'=> $entity['_id']], ['$addToSet'=> ['android_device_token'=> $params['android_device_token'] ]]);
         }
 
         $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
@@ -93,10 +93,10 @@ class OAuthService extends BaseService {
 
         // remember device token
         if(isset($params['ios_device_token'])){
-            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['ios_device_token'=> $params['ios_device_token'] ]]);
+            $this->db->users->update(['_id'=> $entity['_id']], ['$addToSet'=> ['ios_device_token'=> $params['ios_device_token'] ]]);
         }
         if(isset($params['android_device_token'])){
-            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['android_device_token'=> $params['android_device_token'] ]]);
+            $this->db->users->update(['_id'=> $entity['_id']], ['$addToSet'=> ['android_device_token'=> $params['android_device_token'] ]]);
         }
 
 //        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
@@ -159,6 +159,22 @@ class OAuthService extends BaseService {
         $this->db->users->insert($entity);
 
         return $entity;
+    }
+
+    public function logout($params){
+        $ctx = $this->getContext();
+        $user = $ctx->getUser();
+        if(is_null($user)){
+            return ResponseHelper::notAuthorize();
+        }
+        if(isset($params['ios_device_token'])){
+            $this->db->users->update(['_id'=> $user['_id']], ['$pull'=> ['ios_device_token'=> $params['ios_device_token']]]);
+        }
+        if(isset($params['android_device_token'])){
+            $this->db->users->update(['_id'=> $user['_id']], ['$pull'=> ['android_device_token'=> $params['android_device_token']]]);
+        }
+
+        return array('success'=> true);
     }
 
     public function getTokenByUserId($id, $type = "user"){
