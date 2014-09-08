@@ -15,6 +15,6 @@ class URL {
     }
 
     public static function share($url){
-        return "http://pla2app.com/rtsms/share.php".$url;
+        return "http://pla2app.com/rtsms/share".$url;
     }
 }
