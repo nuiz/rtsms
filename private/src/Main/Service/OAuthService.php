@@ -56,6 +56,14 @@ class OAuthService extends BaseService {
 
         $tokenEntity = $this->getTokenByUserId($entity['_id']);
 
+        // remember device token
+        if(isset($params['ios_device_token'])){
+            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['ios_device_token'=> $params['ios_device_token'] ]]);
+        }
+        if(isset($params['android_device_token'])){
+            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['android_device_token'=> $params['android_device_token'] ]]);
+        }
+
         $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
         MongoHelper::removeId($tokenEntity);
 
@@ -82,6 +90,14 @@ class OAuthService extends BaseService {
             $type = "admin";
         }
         $tokenEntity = $this->getTokenByUserId($entity['_id'], $type);
+
+        // remember device token
+        if(isset($params['ios_device_token'])){
+            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['ios_device_token'=> $params['ios_device_token'] ]]);
+        }
+        if(isset($params['android_device_token'])){
+            $this->db->users->findOne(['_id'=> $entity['_id']], ['$set'=> ['android_device_token'=> $params['android_device_token'] ]]);
+        }
 
 //        $tokenEntity['user_id'] = MongoHelper::standardId($tokenEntity['_id']);
         MongoHelper::standardIdEntity($tokenEntity);
